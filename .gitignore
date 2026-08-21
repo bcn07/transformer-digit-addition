@@ -8,3 +8,11 @@ __pycache__/
 .vscode/
 wandb/
 .DS_Store
+
+# cluster job scripts: Imperial DoC specific, hardcoded paths. kept locally, not published
+condor/
+sweep.py
+HANDOFF.md
+
+# per-step checkpoints are regenerable from train.py + seed; only *_best.pt is committed
+results/checkpoints/*_step*.pt
