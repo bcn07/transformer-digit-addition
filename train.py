@@ -204,12 +204,14 @@ def _wandb():
     return wandb
 
 
-CKPT_DIR = None
-CKPT_EVERY = 0
-
-
-def train_model(model: HookedTransformer, args: TrainArgs):
-    train_model.best = -1.0
+def train_model(
+    model: HookedTransformer,
+    args: TrainArgs,
+    ckpt_dir: Path | None = None,
+    ckpt_every: int = 0,
+):
+    """Train and return (model, history). Checkpoints only if `ckpt_dir` is given."""
+    best = -1.0
     if args.use_wandb:
         configs = asdict(args)
         configs["device"] = str(args.device)
@@ -273,18 +275,18 @@ def train_model(model: HookedTransformer, args: TrainArgs):
             history["train_accuracy"].append(train_accuracy)
             history["train_seq_accuracy"].append(train_seq)
 
-            if CKPT_DIR is not None:
+            if ckpt_dir is not None:
                 # save on improvement: these runs oscillate, so the final step is
                 # not reliably the best model
-                if test_seq > train_model.best:
-                    train_model.best = test_seq
+                if test_seq > best:
+                    best = test_seq
                     t.save({"state_dict": model.state_dict(), "step": epoch,
                             "test_seq_accuracy": test_seq, "config": asdict(args)},
-                           CKPT_DIR / f"{args.run_name}_best.pt")
-                if CKPT_EVERY and epoch % CKPT_EVERY == 0:
+                           ckpt_dir / f"{args.run_name}_best.pt")
+                if ckpt_every and epoch % ckpt_every == 0:
                     t.save({"state_dict": model.state_dict(), "step": epoch,
                             "test_seq_accuracy": test_seq, "config": asdict(args)},
-                           CKPT_DIR / f"{args.run_name}_step{epoch:06d}.pt")
+                           ckpt_dir / f"{args.run_name}_step{epoch:06d}.pt")
             progress_bar.set_description(
                 f"train {loss.item():.4f} | test {test_loss:.4f} | "
                 f"seq {test_seq:.3f} | digit {test_accuracy:.3f}"
@@ -298,12 +300,13 @@ def train_model(model: HookedTransformer, args: TrainArgs):
     return trainer.model, history
 
 
-def parse_args() -> TrainArgs:
+def parse_args() -> tuple[TrainArgs, Path, Path | None, int]:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--frac-train", type=float, required=True)
     p.add_argument("--weight-decay", type=float, required=True)
     p.add_argument("--seed", type=int, required=True)
-    p.add_argument("--steps", type=int, default=40_000)
+    p.add_argument("--steps", type=int, default=100_000,
+                   help="every run in results/sweep used the default")
     p.add_argument("--num-digits", type=int, default=2)
     p.add_argument("--n-layers", type=int, default=1)
     p.add_argument("--lr", type=float, default=1e-3)
@@ -335,13 +338,11 @@ if __name__ == "__main__":
     out_dir.mkdir(parents=True, exist_ok=True)
     if ckpt_dir is not None:
         ckpt_dir.mkdir(parents=True, exist_ok=True)
-        globals()["CKPT_DIR"] = ckpt_dir
-        globals()["CKPT_EVERY"] = ckpt_every
     out = out_dir / f"history_{args.run_name}.json"
     print(f"device={DEVICE}  run={args.run_name}  -> {out}", flush=True)
 
     model = create_model(args)
-    model, history = train_model(model, args)
+    model, history = train_model(model, args, ckpt_dir=ckpt_dir, ckpt_every=ckpt_every)
 
     json.dump({"config": asdict(args), "history": history}, open(out, "w"))
     seq = history["test_seq_accuracy"]
