@@ -1,0 +1,21 @@
+# Versions this repo was developed and last run against (Python 3.13).
+# transformer-lens is the one that actually matters: 1.x and 2.x disagree on the
+# shape of the derived attn.mask / attn.IGNORE buffers, which is why
+# load_checkpoint() in notebooks/carry_circuit.ipynb drops them before loading.
+torch==2.13.0
+transformer-lens==2.17.0
+einops==0.8.2
+jaxtyping==0.3.11
+numpy==2.5.1
+matplotlib==3.11.1
+tqdm
+ipykernel==7.3.0
+
+# only needed for the interpretability notebook
+circuitsvis==1.43.3
+
+# optional: train.py logs to wandb only with --wandb
+wandb==0.28.1
+
+# optional: strips notebook outputs on commit, see README
+nbstripout==0.9.1
