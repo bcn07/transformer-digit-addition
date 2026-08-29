@@ -47,9 +47,10 @@ What is left over, and what this repo is actually about, is the low-data end: wh
 
 | | |
 |---|---|
-| `results/sweep_frac_train.png` | generalisation against the memorise-only ceiling, by training fraction |
-| `results/circuit_formation.png` | per-head ablation damage across 50 checkpoints |
+| `results/sweep_frac_train.png` | generalisation against each run's own memorise-only ceiling |
+| `results/circuit_formation.png` | per-head ablation damage across 50 checkpoints, zero and mean |
 | `results/spike_alignment.png` | head swaps against training loss spikes |
+| `results/runs_L1.png` | the single runs, including the `frac_train=0.3` control |
 | `results/weight_decay_comparison.png` | the weight decay instability, on the earlier **2-layer** runs |
 
 `results/README.md` maps every file to the run or command that produced it.
