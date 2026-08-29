@@ -20,14 +20,15 @@ Interpretability uses TransformerLens: attention patterns averaged over the full
 
 **Below a threshold, the model generalises beyond what it could have memorised.** Sweeping the training fraction down until sub-problems become sparse produces a sharp threshold, with a critical point at `frac_train=0.01` where three seeds land at 0.43, 0.53 and 0.98. Eleven of fifteen runs exceed the accuracy achievable by learning only the table entries their training set exposed. Two reached **exactly 1.000 on all 9,700 held-out sums**, and at `frac_train=0.015` a model reached 0.980 having seen only 136 of the 200 entries, so these models are computing rather than looking up. The generalisation is delayed but not abrupt, which is the opposite of the grokking signature: most runs jump within 500 steps to the accuracy their memorised table allows, then grind upward from there. Eight of the nine runs at `frac_train` ≤ 0.02 take 22,900 to 93,800 steps to reach 90% of their peak; the ninth takes 2,300. Only one run (`frac_train=0.01`, seed 1) sits genuinely flat near chance first, for 20,000 steps. At `frac_train=0.03` the climb is over inside 1,100 steps.
 
-**Weight decay is what drives generalisation in that regime.** One pair of runs, same seed, same data, differing only in `weight_decay` — a single pair, so read this as the mechanism in this run rather than an established general claim:
+**Weight decay is what drives generalisation in that regime.** Three pairs of runs at `frac_train=0.015`, each pair sharing a seed and therefore a data split, differing only in `weight_decay`:
 
-| | memorised | test accuracy at 10k / 30k / 60k / 99k | peak |
-|---|---|---|---|
-| `wd = 0.0` | step 200 | 0.081, 0.082, 0.079, 0.069 | 0.089 |
-| `wd = 1.0` | step 200 | 0.474, 0.930, 0.968, 0.957 | **0.975** |
+| seed | memorised | `wd=0` peak | `wd=1` peak | `wd=0` at 99k | `wd=1` at 99k | that split's ceiling |
+|---|---|---|---|---|---|---|
+| 0 | step 200 | 0.320 | **0.745** | 0.194 | 0.727 | 0.640 |
+| 1 | step 200 | 0.218 | **0.980** | 0.216 | 0.980 | 0.650 |
+| 2 | step 200 | 0.089 | **0.975** | 0.069 | 0.957 | 0.716 |
 
-Both memorise immediately. Without weight decay the model then does nothing for 100,000 steps. This inverts the conclusion from the high-data regime, where weight decay looked like pure downside because it destabilised training with no benefit.
+All six memorise by step 200, and the two ranges do not overlap: the worst `wd=1` run beats the best `wd=0` run by more than a factor of two. Every `wd=1` run also clears its memorise-only ceiling, and no `wd=0` run comes close to its own — so without decay the model does not merely fail to generalise, it fails even to consolidate the table entries its training set showed it. This inverts the conclusion from the high-data regime, where weight decay looked like pure downside because it destabilised training with no benefit.
 
 **Attention routes the carry positionally, and the MLP computes it.** Two heads do the routing. For each answer digit, one fetches the column being added and the other fetches the column whose overflow becomes that digit's carry — at the tens digit they point at the tens and units operands respectively, and at the units digit, which has no carry in, they coincide. Neither is input-dependent: across 9,850 test sums the largest carry versus non-carry difference in either head's attention is 0.007 on a budget of 1.0. They fetch the units column unconditionally, because you cannot know whether a carry happened until you have looked, so the conditional part must happen downstream. Ablating the MLP destroys every answer position.
 
