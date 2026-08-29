@@ -52,7 +52,6 @@ What is left over, and what this repo is actually about, is the low-data end: wh
 | `results/circuit_formation.png` | per-head ablation damage across 50 checkpoints, zero and mean |
 | `results/spike_alignment.png` | head swaps against training loss spikes |
 | `results/runs_L1.png` | the single runs, including the `frac_train=0.3` control |
-| `results/weight_decay_comparison.png` | the weight decay instability, on the earlier **2-layer** runs |
 
 `results/README.md` maps every file to the run or command that produced it.
 
@@ -63,7 +62,8 @@ train.py                        CLI entry point; reproduces any single run
 notebooks/digit_addition.ipynb  task, training setup, frac_train sweep
 notebooks/carry_circuit.ipynb   interpretability, from a saved checkpoint
 results/checkpoints/            trained models (*_best.pt)
-results/sweep/                  per-run training histories
+results/sweep/                  the frac_train sweep, weight_decay=1.0
+results/controls/               matched weight_decay=0 runs
 results/                        analysis outputs and figures, indexed in results/README.md
 ```
 
