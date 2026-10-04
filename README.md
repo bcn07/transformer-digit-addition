@@ -18,7 +18,7 @@ Interpretability uses TransformerLens: attention patterns averaged over the full
 
 **Decimal addition does not grok under Nanda's protocol.** Under his exact configuration — `frac_train=0.3`, `weight_decay=1.0` — the model reaches 0.99 per-digit test accuracy at step 150 and stays at 1.000 for the rest of the run. Train and test whole-sum accuracy cross 0.99 ten steps apart, at 170 and 180, and the largest train–test loss gap over 5,000 steps is 0.089. There is no window in which the model has memorised and not yet generalised. The reason is that addition decomposes: the entire function is 200 `(digit, digit, carry_in)` table entries, and 3,000 training examples cover each of them about thirty times. Generalising is cheaper than memorising, so the model never memorises first and there is no delayed transition to observe.
 
-**Below a threshold, the model generalises beyond what it could have memorised.** Sweeping the training fraction down until sub-problems become sparse produces a sharp threshold, with a critical point at `frac_train=0.01` where three seeds land at 0.43, 0.53 and 0.98. Eleven of fifteen runs exceed the accuracy achievable by learning only the table entries their training set exposed. Two reached **exactly 1.000 on all 9,700 held-out sums**, and at `frac_train=0.015` a model reached 0.980 having seen only 136 of the 200 entries, so these models are computing rather than looking up. The generalisation is delayed but not abrupt, which is the opposite of the grokking signature: most runs jump within 500 steps to the accuracy their memorised table allows, then grind upward from there. Eight of the nine runs at `frac_train` ≤ 0.02 take 22,900 to 93,800 steps to reach 90% of their peak; the ninth takes 2,300. Only one run (`frac_train=0.01`, seed 1) sits genuinely flat near chance first, for 20,000 steps. At `frac_train=0.03` the climb is over inside 1,100 steps.
+**Below a threshold, the model generalises beyond what it could have memorised.** Sweeping the training fraction down until sub-problems become sparse produces a sharp threshold, with a critical point at `frac_train=0.01` where three seeds land at 0.43, 0.53 and 0.98. Eleven of fifteen runs exceed the accuracy achievable by learning only the table entries their training set exposed. Two reached **exactly 1.000 on all 9,700 held-out sums**, and at `frac_train=0.015` a model reached 0.980 having seen only 136 of the 200 entries, so these models are computing rather than looking up. The generalisation is delayed but not abrupt, which is the opposite of the grokking signature: most runs jump within 500 steps to the accuracy their memorised table allows, then grind upward from there. Eight of the nine runs at `frac_train` 0.01–0.02 take 22,900 to 93,800 steps to climb from 10% to 90% of their peak; the ninth takes 2,300. Only one run (`frac_train=0.01`, seed 1) sits genuinely flat near chance first, for 20,000 steps. At `frac_train=0.03` the climb is over inside 1,100 steps.
 
 **Weight decay is what drives generalisation in that regime.** Three pairs of runs at `frac_train=0.015`, each pair sharing a seed and therefore a data split, differing only in `weight_decay`:
 
@@ -100,3 +100,16 @@ python train.py --frac-train 0.015 --weight-decay 1.0 --seed 2 --steps 100000 \
 Train loss reaches ~1e-7 in these runs, which is where the Adam instability lives, so the spike
 schedule is sensitive to floating-point detail and will not reproduce step-for-step on different
 hardware.
+
+## Acknowledgements
+
+This started as self-study alongside [ARENA](https://github.com/callummcdougall/ARENA_3.0)'s
+Chapter 1 (Transformer Interpretability). The `TrainArgs` / `Trainer` structure in `train.py` and
+the notebook began as ARENA's training-loop code (MIT licence) and was cut down from there, and
+the interpretability approach follows ARENA's exercises on ablation and on the Nanda grokking
+result.
+
+The training protocol and the question come from Nanda, Chan, Lieberum, Smith and Steinhardt,
+[Progress measures for grokking via mechanistic interpretability](https://arxiv.org/abs/2301.05217)
+(ICLR 2023). Models, hooks and ablations use
+[TransformerLens](https://github.com/TransformerLensOrg/TransformerLens).
